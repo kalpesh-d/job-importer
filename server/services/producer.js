@@ -62,4 +62,4 @@ const startImportProcess = async (jobQueue) => {
   console.log('[Producer] Finished import cycle.');
 };
 
-module.exports = { startImportProcess, JOB_FEED_URLS };
+module.exports = { startImportProcess };
