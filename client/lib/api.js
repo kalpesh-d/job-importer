@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = 'https://job-importer-pbyl.onrender.com/api';
 
 export async function fetchImportLogs(page = 1, limit = 10) {
   const res = await fetch(`${API_BASE}/imports/history?page=${page}&limit=${limit}`);
