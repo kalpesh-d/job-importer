@@ -28,50 +28,63 @@ A scalable job importer system that:
 
 * Handles each job as an atomic unit
 * Supports retry, backoff, and concurrency
+* Uses `Queue` and `Worker` from BullMQ
 
 ### 3. Consumer (Worker)
 
 * Processes one job per queue event
-* Upserts job to MongoDB using jobId as unique key
-* Updates ImportLog with job result (new, updated, failed)
-* When total processed jobs match `totalFetched`, marks ImportLog as completed and adds `endTime`
+* Creates a unique job ID using hash from title, company, and location
+* Upserts job into MongoDB (Job collection)
+* Updates ImportLog (newJobs, updatedJobs, failedJobs)
+* On finishing all jobs for a log, updates status and sets `endTime`
 
-### 4. ImportLog Tracker
+### 4. ImportLog Tracker (MongoDB)
 
-* MongoDB schema that captures metadata for each import:
+* Stores metadata and counters for each import run:
 
-  * Feed URL (fileName)
-  * Job counters: totalFetched, newJobs, updatedJobs, failedJobs
-  * failedJobDetails with reasons
-  * Timestamps and status
+  * fileName (feed URL)
+  * totalFetched
+  * newJobs
+  * updatedJobs
+  * failedJobs
+  * failedJobDetails (with reason)
+  * timestamps and status
 
 ### 5. API (Express.js)
 
-* `/api/imports/trigger`: Triggers job fetching
-* `/api/imports/history`: Provides paginated import log view
+* `/api/imports/trigger` — Trigger import process manually
+* `/api/imports/history` — Get paginated import logs
+* `/health` — Check MongoDB and Redis connection
 
 ---
 
 ## Data Flow Diagram
 
 ```text
-Cron/API Trigger
-     |
-     v
-[Producer: Fetch URLs]
-     |
-     v
-[Parse XML to JSON]
-     |
-     v
-[Insert to Redis Queue (BullMQ)]
-     |
-     v
-[Worker (Consumer)] <--- Redis Queue
-     |
-     v
-[MongoDB: Upsert Job]
-     |
-     v
-[Update ImportLog (success/update/fail)]
+[ Cron or Manual Trigger ]
+            |
+            v
+   [ Producer - Fetch Feeds ]
+            |
+            v
+   [ Parse XML -> JSON ]
+            |
+            v
+[ Queue Jobs in Redis (BullMQ) ]
+            |
+            v
+[ Worker (Consumer) ]  <--- Redis Queue
+            |
+            v
+   [ MongoDB - Upsert Job ]
+            |
+            v
+[ Update ImportLog Schema (new/updated/failed) ]
+            |
+            v
+     [ Mark ImportLog completed ]
 ```
+
+---
+
+This architecture ensures fault-tolerant, observable, and scalable job importing.

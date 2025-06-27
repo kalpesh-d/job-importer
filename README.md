@@ -1,10 +1,10 @@
-# 🛠️ Scalable Job Importer
+# 🔧 Scalable Job Importer
 
 A robust system that fetches job data from multiple external XML feeds, queues and processes each job using Redis and BullMQ, stores data in MongoDB, and tracks import history via an admin panel built with Next.js.
 
 ---
 
-## 🚀 Features
+## ✨ Features
 
 * XML to JSON job feed conversion
 * Queue-based background processing using BullMQ + Redis
@@ -25,7 +25,8 @@ A robust system that fetches job data from multiple external XML feeds, queues a
 │   ├── config/         # MongoDB connection config
 │   ├── models/         # Mongoose schemas (Job, ImportLog)
 │   ├── services/       # Producer & Worker logic
-│   ├── controllers/    # Express controller logic (API)
+│   ├── controller/     # Express controller logic (API)
+│   ├── utils/          # XML parser
 │   └── app.js          # Express app entrypoint
 ├── .env                # Environment variables
 ├── README.md           # Project documentation
@@ -44,21 +45,23 @@ cd job-importer
 
 ### 2. Setup Environment Variables
 
-Create a `.env` file in the root of both `client/` and `server/` folders:
-
-#### For `server/.env`
+Create a `.env` file in `server/`:
 
 ```env
-MONGODB_URI=mongodb://localhost:27017/jobimporter
-REDIS_URL=redis://localhost:6379
 PORT=3000
+MONGO_URI=your_mongodb_uri
+REDIS_HOST=your_redis_host
+REDIS_PORT=your_redis_port
+REDIS_PASSWORD=your_redis_password
 ```
 
-#### For `client/.env.local`
+In `client/.env.local`:
 
 ```env
 NEXT_PUBLIC_API_BASE=http://localhost:3000
 ```
+
+> Ensure Redis uses the `noeviction` policy in production.
 
 ### 3. Install Dependencies
 
@@ -78,10 +81,8 @@ cd ../client && npm install
 
 ```bash
 cd server
-npm run dev
+node app.js
 ```
-
-> Runs Express server with cron + BullMQ worker + Redis queue.
 
 ### Start Frontend
 
@@ -90,26 +91,75 @@ cd client
 npm run dev
 ```
 
-> Runs Next.js admin panel at `http://localhost:3001`
+Visit: [http://localhost:3000](http://localhost:3000) (Backend)
+Frontend typically runs at [http://localhost:3001](http://localhost:3001)
 
 ---
 
 ## 🔄 Cron Import
 
-* The system runs a cron job every hour.
-* Manually trigger via `POST /api/imports/trigger`.
+* Cron runs hourly via `node-cron`
+* Manual trigger: `POST /api/imports/trigger`
 
 ---
 
 ## 📊 View Import Logs
 
-* Visit `/` in the frontend.
-* Lists import history with pagination.
-* Displays `totalFetched`, `newJobs`, `updatedJobs`, `failedJobs`, and `status`.
+* `/api/imports/history?page=1&limit=7`
+* Frontend shows paginated logs
+* Each log includes:
+
+  * totalFetched
+  * newJobs
+  * updatedJobs
+  * failedJobs
+  * status and time
 
 ---
 
-## 🧠 Architecture Decisions
+## 💪 Health Check
 
-See `/docs/architecture.md` for full system design and modular breakdown.
+```http
+GET /health
+```
 
+Returns DB and Redis status.
+
+---
+
+## 🚀 Deployment
+
+* Backend: Render, Railway, DigitalOcean
+* Frontend: Vercel, Netlify
+* Redis: Redis Cloud (set eviction to `noeviction`)
+
+---
+
+## 🛍️ API Endpoints
+
+### `POST /api/imports/trigger`
+
+Manual import trigger
+
+### `GET /api/imports/history`
+
+Paginated logs:
+
+```http
+?page=1&limit=7
+```
+
+### `GET /health`
+
+Check MongoDB & Redis connectivity
+
+---
+
+## 📀 Redis Notes
+
+* Ensure correct password, host, and port
+* `noeviction` policy required
+* If using `redis` v4:
+
+  * Use `.duplicate()` for BullMQ
+  * Use `createClient()` for general caching
