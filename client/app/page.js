@@ -45,7 +45,7 @@ export default function Home() {
           <h1 className="text-3xl font-bold text-gray-800">📊 Job Import Dashboard</h1>
           <button
             onClick={handleTrigger}
-            className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition"
+            className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition cursor-pointer"
           >
             Trigger Import
           </button>

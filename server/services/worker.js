@@ -59,6 +59,9 @@ const processJob = async (jobData) => {
       const totalProcessed = currentLog.newJobs + currentLog.updatedJobs + currentLog.failedJobs;
 
       if (totalProcessed >= currentLog.totalFetched) {
+        console.log(`[Worker] ✅ All jobs processed for feed: ${currentLog.fileName}`);
+        console.log(`[Worker] 📦 New: ${currentLog.newJobs} | 🔁 Updated: ${currentLog.updatedJobs} | ❌ Failed: ${currentLog.failedJobs}`);
+
         await ImportLog.updateOne(
           { _id: logId },
           {

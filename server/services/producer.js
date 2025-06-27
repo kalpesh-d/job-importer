@@ -27,7 +27,7 @@ const startImportProcess = async (jobQueue) => {
 
       const logId = importLog._id;
 
-      const { data: xmlData } = await axios.get(url, { timeout: 15000 });
+      const { data: xmlData } = await axios.get(url, { timeout: 30000 });
       const jobs = await parseXML(xmlData);
 
       if (jobs.length === 0) {

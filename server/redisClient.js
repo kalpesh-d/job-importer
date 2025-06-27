@@ -1,8 +1,8 @@
-import { createClient } from 'redis';
+const { createClient } = require('redis');
 
 const client = createClient({
   username: 'default',
-  password: process.env.REDIS_PASSWORD, // safer via env
+  password: process.env.REDIS_PASSWORD,
   socket: {
     host: process.env.REDIS_HOST,
     port: Number(process.env.REDIS_PORT)
@@ -11,11 +11,11 @@ const client = createClient({
 
 client.on('error', err => console.error('❌ Redis Client Error:', err));
 
-export async function connectRedis() {
+async function connectRedis() {
   if (!client.isOpen) {
     await client.connect();
-    console.log('✅ Redis connected');
+    console.log('✅ Redis (for caching) connected');
   }
 }
 
-export default client;
+module.exports = { client, connectRedis };
